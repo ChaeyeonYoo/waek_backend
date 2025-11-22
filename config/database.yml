@@ -1,0 +1,22 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: localhost
+  port: 5432
+  username: chaeyeon
+  # password:            # 비밀번호 없으면 이 줄은 주석 또는 빈 값
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: waek_backend_development
+
+test:
+  <<: *default
+  database: waek_backend_test
+
+production:
+  <<: *default
+  database: waek_backend_production
+  username: waek_backend
+  password: <%= ENV["WAEK_BACKEND_DATABASE_PASSWORD"] %>
