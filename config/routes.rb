@@ -1,20 +1,27 @@
 Rails.application.routes.draw do
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
   get "up" => "rails/health#show", as: :rails_health_check
 
   # 인증 관련 API
-  post 'auth/social_login', to: 'auth#social_login'  # POST /auth/social_login
+  post 'auth/social/verify', to: 'auth#social_verify'
+  post 'auth/social/signup', to: 'auth#social_signup'
+  get 'users/check_id', to: 'auth#check_id'
+  get 'me', to: 'auth#me'
+  post 'auth/logout', to: 'auth#logout'
+  delete 'me', to: 'auth#delete_me'
 
-  # 산책 기록 API
-  resources :workouts, only: [:create, :index]  # POST /workouts, GET /workouts
+  # Walk (산책 기록) API
+  post 'uploads/presigned_url', to: 'walks#presigned_url'
+  resources :walks, only: [:create, :index, :show, :destroy]
 
-  # 일일 요약 API
-  get 'daily_workouts/:date', to: 'daily_workouts#show', as: 'daily_workout'  # GET /daily_workouts/2024-11-15
-  get 'daily_workouts', to: 'daily_workouts#index'  # GET /daily_workouts
+  # Feedback API
+  resources :feedbacks, only: [:create]
+  get 'admin/feedbacks', to: 'feedbacks#admin_index'
 
-  # 카드 API
-  resources :share_cards, only: [:create, :index]  # POST /share_cards, GET /share_cards
-
-  # 피드백 API
-  resources :feedbacks, only: [:create]  # POST /feedbacks
+  # Subscription (구독) API
+  get 'me/subscription', to: 'subscriptions#show'
+  post 'me/subscription/trial', to: 'subscriptions#start_trial'
+  post 'me/subscription', to: 'subscriptions#create'
+  delete 'me/subscription', to: 'subscriptions#destroy'
 end

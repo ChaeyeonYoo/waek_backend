@@ -10,80 +10,61 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_15_085555) do
+ActiveRecord::Schema[7.1].define(version: 2025_11_22_203923) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-
-  create_table "daily_workouts", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.date "date", null: false
-    t.boolean "is_workout_goal_achieved", default: false, null: false
-    t.boolean "has_walk_10min", default: false, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id", "date"], name: "index_daily_workouts_on_user_id_and_date", unique: true
-    t.index ["user_id"], name: "index_daily_workouts_on_user_id"
-  end
 
   create_table "feedbacks", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.text "content", null: false
     t.string "app_version"
-    t.string "platform", null: false
+    t.string "device_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_feedbacks_on_user_id"
   end
 
-  create_table "share_cards", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.bigint "workout_id", null: false
-    t.date "card_date", null: false
-    t.string "frame_theme_key"
-    t.string "image_url"
-    t.decimal "distance", precision: 10, scale: 2
-    t.integer "steps"
-    t.integer "duration"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["card_date"], name: "index_share_cards_on_card_date"
-    t.index ["user_id", "card_date"], name: "index_share_cards_on_user_id_and_card_date"
-    t.index ["user_id"], name: "index_share_cards_on_user_id"
-    t.index ["workout_id"], name: "index_share_cards_on_workout_id"
-  end
-
   create_table "users", force: :cascade do |t|
-    t.string "login_id"
+    t.string "username"
     t.string "nickname"
-    t.integer "profile_image_key"
-    t.integer "provider", null: false
-    t.string "provider_user_id"
-    t.string "social_email"
-    t.boolean "is_premium", default: false, null: false
+    t.integer "profile_image_code"
+    t.string "provider", null: false
+    t.string "provider_id"
+    t.boolean "is_subscribed", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["provider", "provider_user_id"], name: "index_users_on_provider_and_provider_user_id", unique: true
+    t.integer "token_version", default: 1, null: false
+    t.datetime "subscribed_at"
+    t.datetime "subscription_expires_at"
+    t.boolean "is_trial", default: false, null: false
+    t.datetime "trial_started_at"
+    t.datetime "trial_expires_at"
+    t.boolean "has_used_trial", default: false, null: false
+    t.datetime "last_login_at"
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_users_on_deleted_at"
+    t.index ["provider", "provider_id"], name: "index_users_on_provider_and_provider_id", unique: true
+    t.index ["username"], name: "index_users_on_username", unique: true
   end
 
-  create_table "workouts", force: :cascade do |t|
+  create_table "walks", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.date "workout_date", null: false
     t.datetime "started_at", null: false
     t.datetime "ended_at", null: false
-    t.decimal "distance", precision: 10, scale: 2
-    t.integer "steps"
-    t.integer "duration", null: false
-    t.decimal "calories", precision: 8, scale: 2
+    t.decimal "distance_meters", precision: 10, scale: 2
+    t.integer "step_count"
+    t.integer "duration_seconds", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id", "workout_date"], name: "index_workouts_on_user_id_and_workout_date"
-    t.index ["user_id"], name: "index_workouts_on_user_id"
-    t.index ["workout_date"], name: "index_workouts_on_workout_date"
+    t.string "photo_key"
+    t.string "status", default: "active", null: false
+    t.datetime "deleted_at"
+    t.index ["deleted_at"], name: "index_walks_on_deleted_at"
+    t.index ["status"], name: "index_walks_on_status"
+    t.index ["user_id", "started_at"], name: "index_walks_on_user_id_and_started_at"
+    t.index ["user_id"], name: "index_walks_on_user_id"
   end
 
-  add_foreign_key "daily_workouts", "users"
   add_foreign_key "feedbacks", "users"
-  add_foreign_key "share_cards", "users"
-  add_foreign_key "share_cards", "workouts"
-  add_foreign_key "workouts", "users"
+  add_foreign_key "walks", "users"
 end

@@ -1,62 +1,180 @@
+# 인증 관련 API 컨트롤러
 class AuthController < ApplicationController
-  # 소셜 로그인 API
-  # POST /auth/social_login
-  def social_login
-    # 1. 요청 데이터 받기 (iOS에서 보낸 데이터)
-    provider = params[:provider]                    # 1: apple, 2: kakao, 3: google
-    provider_user_id = params[:provider_user_id]    # 소셜 로그인 제공자에서 받은 유저 ID
-    social_email = params[:social_email]             # 소셜 로그인 이메일
-    nickname = params[:nickname]                     # 닉네임
-    profile_image_key = params[:profile_image_key]  # 프로필 사진 키 (선택사항)
+  skip_before_action :authenticate_user!, only: [:social_verify, :social_signup, :check_id]
 
-    # 2. 필수 파라미터 검증
-    unless provider && provider_user_id && nickname
-      render json: { error: '필수 파라미터가 없습니다 (provider, provider_user_id, nickname)' }, 
-             status: :bad_request
+  # POST /auth/social/verify
+  # 소셜 유저 존재 확인 + 로그인
+  def social_verify
+    provider = params[:provider]
+    provider_id = params[:provider_id]
+
+    # 필수 파라미터 검증
+    unless provider && provider_id
+      render json: { error: 'provider와 provider_id는 필수입니다' }, status: :bad_request
       return
     end
 
-    # 3. 유저 찾기 또는 생성
-    # find_or_create_by: 있으면 찾고, 없으면 생성
-    user = User.find_or_create_by(
+    # provider 유효성 검증
+    unless %w[kakao google apple].include?(provider)
+      render json: { error: '지원하지 않는 provider입니다' }, status: :bad_request
+      return
+    end
+
+    # 유저 찾기
+    user = User.active.find_by(provider: provider, provider_id: provider_id)
+
+    if user
+      # 기존 유저인 경우 - 로그인 처리
+      user.update_last_login!
+      token = JwtService.encode(user.id, token_version: user.token_version)
+
+      render json: {
+        status: 'EXISTS',
+        user: {
+          id: user.id,
+          username: user.username,
+          nickname: user.nickname,
+          profile_image_code: user.profile_image_code,
+          provider: user.provider
+        },
+        token: {
+          access_token: token,
+          token_type: 'Bearer',
+          expires_in: nil # 영구 토큰
+        }
+      }, status: :ok
+    else
+      # 기존 유저가 아닌 경우 - 회원가입 필요
+      render json: {
+        status: 'NEED_SIGNUP',
+        provider: provider
+      }, status: :ok
+    end
+  end
+
+  # POST /auth/social/signup
+  # 최초 회원가입
+  def social_signup
+    provider = params[:provider]
+    provider_id = params[:provider_id]
+    username = params[:username]
+    nickname = params[:nickname]
+    profile_image_code = params[:profile_image_code]
+
+    # 필수 파라미터 검증
+    unless provider && provider_id && username && nickname
+      render json: { error: 'provider, provider_id, username, nickname은 필수입니다' }, status: :bad_request
+      return
+    end
+
+    # provider 유효성 검증
+    unless %w[kakao google apple].include?(provider)
+      render json: { error: '지원하지 않는 provider입니다' }, status: :bad_request
+      return
+    end
+
+    # username 중복 확인
+    if User.exists?(username: username)
+      render json: { error: '이미 사용 중인 username입니다' }, status: :conflict
+      return
+    end
+
+    # provider + provider_id 중복 확인
+    if User.exists?(provider: provider, provider_id: provider_id)
+      render json: { error: '이미 가입된 소셜 계정입니다' }, status: :conflict
+      return
+    end
+
+    # profile_image_code 유효성 검증
+    if profile_image_code && !(0..4).include?(profile_image_code.to_i)
+      render json: { error: 'profile_image_code는 0~4 사이의 값이어야 합니다' }, status: :bad_request
+      return
+    end
+
+    # 유저 생성
+    user = User.new(
       provider: provider,
-      provider_user_id: provider_user_id
-    ) do |u|
-      # 새로 생성할 때만 실행되는 블록
-      u.nickname = nickname
-      u.social_email = social_email if social_email.present?
-      u.profile_image_key = profile_image_key if profile_image_key.present?
+      provider_id: provider_id,
+      username: username,
+      nickname: nickname,
+      profile_image_code: profile_image_code&.to_i,
+      token_version: 1,
+      is_subscribed: false,
+      is_trial: false,
+      has_used_trial: false
+    )
+
+    if user.save
+      user.update_last_login!
+      token = JwtService.encode(user.id, token_version: user.token_version)
+
+      render json: {
+        user: {
+          id: user.id,
+          username: user.username,
+          nickname: user.nickname,
+          profile_image_code: user.profile_image_code,
+          provider: user.provider,
+          created_at: format_time(user.created_at),
+          updated_at: format_time(user.updated_at)
+        },
+        token: {
+          access_token: token,
+          token_type: 'Bearer',
+          expires_in: nil # 영구 토큰
+        }
+      }, status: :created
+    else
+      render json: { 
+        error: '회원가입에 실패했습니다',
+        errors: user.errors.full_messages
+      }, status: :unprocessable_entity
     end
+  end
 
-    # 4. 유저 정보 업데이트 (이미 존재하는 경우에도 최신 정보로 업데이트)
-    update_params = { nickname: nickname }
-    update_params[:social_email] = social_email if social_email.present?
-    update_params[:profile_image_key] = profile_image_key if profile_image_key.present?
-    user.update(update_params)
+  # GET /users/check_id
+  # username 중복 확인
+  def check_id
+    username = params[:username]
 
-    # 5. 유효성 검사 실패 시 에러 반환
-    unless user.valid?
-      render json: { errors: user.errors.full_messages }, status: :unprocessable_entity
+    unless username
+      render json: { error: 'username은 필수입니다' }, status: :bad_request
       return
     end
 
-    # 6. JWT 토큰 발급
-    token = JwtService.encode(user.id)
+    available = !User.exists?(username: username)
 
-    # 7. 응답 반환 (토큰 + 유저 정보)
     render json: {
-      token: token,
-      user: {
-        id: user.id,
-        nickname: user.nickname,
-        profile_image_key: user.profile_image_key,
-        provider: user.provider,
-        is_premium: user.is_premium
-      }
+      username: username,
+      available: available
     }, status: :ok
-  rescue StandardError => e
-    # 예외 발생 시 에러 응답
-    render json: { error: '서버 오류가 발생했습니다', message: e.message }, status: :internal_server_error
+  end
+
+  # GET /me
+  # 내 정보 조회
+  def me
+    render json: {
+      id: current_user.id,
+      username: current_user.username,
+      nickname: current_user.nickname,
+      profile_image_code: current_user.profile_image_code,
+      provider: current_user.provider,
+      created_at: format_time(current_user.created_at),
+      updated_at: format_time(current_user.updated_at)
+    }, status: :ok
+  end
+
+  # POST /auth/logout
+  # 로그아웃 (token_version +1)
+  def logout
+    current_user.increment_token_version!
+    head :no_content
+  end
+
+  # DELETE /me
+  # 계정 삭제 (soft delete)
+  def delete_me
+    current_user.soft_delete!
+    head :no_content
   end
 end
-
