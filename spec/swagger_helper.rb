@@ -28,17 +28,12 @@ RSpec.configure do |config|
       paths: {},
       servers: [
         {
-          url: 'http://localhost:3000',
-          description: 'Development server'
+          url: 'https://api.waek.app',
+          description: 'Production server'
         },
         {
-          url: 'https://{defaultHost}',
-          variables: {
-            defaultHost: {
-              default: 'your-production-server.com'
-            }
-          },
-          description: 'Production server'
+          url: 'http://localhost:3000',
+          description: 'Development server'
         }
       ],
       components: {

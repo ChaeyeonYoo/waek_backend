@@ -45,17 +45,19 @@ gem "jwt"
 gem "dotenv-rails"
 
 # 테스트 프레임워크
-gem "rspec-rails"
+gem "rspec-rails", groups: [:development, :test]
+
+# Swagger/OpenAPI documentation (프로덕션에서도 사용)
+gem "rswag-api"
+gem "rswag-ui"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ]
   
-  # Swagger/OpenAPI documentation
+  # Swagger 스펙 생성용 (개발/테스트 환경에서만 필요)
   gem "rswag"
   gem "rswag-specs"
-  gem "rswag-api"
-  gem "rswag-ui"
 end
 
 group :development do

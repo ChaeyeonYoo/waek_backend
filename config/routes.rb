@@ -1,12 +1,7 @@
 Rails.application.routes.draw do
-  # Swagger UI / API (개발용)
-  if defined?(Rswag::Ui)
-    mount Rswag::Ui::Engine => '/api-docs'
-  end
-
-  if defined?(Rswag::Api)
-    mount Rswag::Api::Engine => '/api-docs'
-  end
+  # Swagger UI / API (모든 환경에서 사용 가능)
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
 
   get "up" => "rails/health#show", as: :rails_health_check
 

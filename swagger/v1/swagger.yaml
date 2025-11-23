@@ -677,13 +677,10 @@ paths:
         '204':
           description: 삭제 성공
 servers:
+- url: https://api.waek.app
+  description: Production server
 - url: http://localhost:3000
   description: Development server
-- url: https://{defaultHost}
-  variables:
-    defaultHost:
-      default: your-production-server.com
-  description: Production server
 components:
   securitySchemes:
     bearerAuth:
