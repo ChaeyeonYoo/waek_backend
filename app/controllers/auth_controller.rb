@@ -40,7 +40,7 @@ class AuthController < ApplicationController
         token: {
           access_token: token,
           token_type: 'Bearer',
-          expires_in: nil # 영구 토큰
+          expires_in: 3600
         }
       }, status: :ok
     else
@@ -60,6 +60,7 @@ class AuthController < ApplicationController
     username = params[:username]
     nickname = params[:nickname]
     profile_image_code = params[:profile_image_code]
+    social_email = params[:social_email] # 선택 파라미터
 
     # 필수 파라미터 검증
     unless provider && provider_id && username && nickname
@@ -121,7 +122,7 @@ class AuthController < ApplicationController
         token: {
           access_token: token,
           token_type: 'Bearer',
-          expires_in: nil # 영구 토큰
+          expires_in: 3600
         }
       }, status: :created
     else

@@ -6,11 +6,21 @@ class FeedbacksController < ApplicationController
   # 피드백 작성
   def create
     content = params[:content]
-    device_type = params[:device_type] || 'ios'
-    app_version = params[:app_version] || '1.0.0'
+    device_type = params[:device_type]
+    app_version = params[:app_version]
 
     unless content
       render json: { error: 'content는 필수입니다' }, status: :bad_request
+      return
+    end
+
+    unless device_type
+      render json: { error: 'device_type은 필수입니다' }, status: :bad_request
+      return
+    end
+
+    unless app_version
+      render json: { error: 'app_version은 필수입니다' }, status: :bad_request
       return
     end
 
@@ -55,8 +65,6 @@ class FeedbacksController < ApplicationController
           nickname: feedback.user.nickname
         },
         content: feedback.content,
-        device_type: feedback.device_type,
-        app_version: feedback.app_version,
         created_at: format_time(feedback.created_at)
       }
     end

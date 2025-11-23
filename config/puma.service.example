@@ -1,0 +1,61 @@
+# systemd 서비스 파일 예제
+#
+# 이 파일을 /etc/systemd/system/puma.service로 복사하고 수정하세요:
+#   sudo cp config/puma.service.example /etc/systemd/system/puma.service
+#   sudo nano /etc/systemd/system/puma.service
+#
+# 서비스 활성화:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable puma
+#   sudo systemctl start puma
+#
+# 서비스 관리:
+#   sudo systemctl status puma
+#   sudo systemctl restart puma
+#   sudo systemctl stop puma
+#   sudo systemctl start puma
+
+[Unit]
+Description=Puma HTTP Server for waek_backend
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+# 실제 사용자 이름으로 변경하세요
+User=your-username
+# 실제 프로젝트 경로로 변경하세요
+WorkingDirectory=/path/to/waek_backend
+
+# 환경 변수 설정
+Environment="RAILS_ENV=production"
+Environment="RAILS_LOG_TO_STDOUT=true"
+
+# .env 파일에서 환경 변수 로드 (권장)
+EnvironmentFile=/path/to/waek_backend/.env
+
+# 또는 직접 환경 변수 지정
+# Environment="AWS_ACCESS_KEY_ID=your-key"
+# Environment="AWS_SECRET_ACCESS_KEY=your-secret"
+# Environment="AWS_REGION=ap-northeast-2"
+# Environment="AWS_S3_BUCKET=waek-photo-bucket"
+
+# Puma 실행 명령
+# bundle 경로는 실제 경로로 변경하세요
+ExecStart=/usr/local/bin/bundle exec puma -C config/puma.rb
+
+# 재시작 정책
+Restart=always
+RestartSec=10
+
+# 리소스 제한 (선택사항)
+# LimitNOFILE=65536
+
+# 보안 설정
+# PrivateTmp=true
+# ProtectSystem=strict
+# ReadWritePaths=/path/to/waek_backend
+
+[Install]
+WantedBy=multi-user.target
+

@@ -18,11 +18,6 @@ class SubscriptionsController < ApplicationController
       days_left: user.days_left
     }
 
-    # trial인 경우 trial_started_at 추가
-    if user.is_trial && !user.is_expired?
-      response_data[:trial_started_at] = format_time(user.trial_started_at)
-    end
-
     render json: response_data, status: :ok
   end
 
@@ -52,12 +47,7 @@ class SubscriptionsController < ApplicationController
       has_used_trial: true
     )
 
-    render json: {
-      status: 'trial_started',
-      trial_started_at: format_time(user.trial_started_at),
-      trial_expires_at: format_time(user.trial_expires_at),
-      days_left: user.days_left
-    }, status: :ok
+    head :no_content
   end
 
   # POST /me/subscription

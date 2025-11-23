@@ -2,83 +2,97 @@ require 'swagger_helper'
 
 RSpec.describe 'Feedbacks API', type: :request do
   path '/feedbacks' do
-    post '피드백 저장' do
+    post '피드백 작성' do
       tags '피드백'
-      description '사용자 피드백을 저장합니다.'
+      description '피드백을 작성합니다.'
       security [bearerAuth: []]
       consumes 'application/json'
       produces 'application/json'
 
-      parameter name: :feedback, in: :body, schema: {
+      parameter name: :body, in: :body, schema: {
         type: :object,
         properties: {
-          feedback: {
-            type: :object,
-            properties: {
-              content: { type: :string, description: '피드백 내용', example: '앱이 정말 좋아요! 계속 사용하고 싶습니다.' },
-              app_version: { type: :string, description: '앱 버전 (선택사항)', example: '1.0.0' },
-              platform: { type: :string, description: '플랫폼', example: 'ios' }
-            },
-            required: ['content', 'platform']
-          }
-        }
+          content: { type: :string, example: '왹왹이 너무 귀여워요! 산책할 때 동기부여 돼요 🐣' },
+          device_type: { type: :string, enum: ['ios', 'android', 'web'], example: 'ios' },
+          app_version: { type: :string, example: '1.0.3' }
+        },
+        required: ['content', 'device_type', 'app_version']
       }
 
-      response '201', '피드백 생성 성공' do
+      response '201', '피드백 작성 성공' do
         schema type: :object,
           properties: {
             id: { type: :integer },
-            user_id: { type: :integer },
             content: { type: :string },
-            app_version: { type: :string, nullable: true },
-            platform: { type: :string },
-            created_at: { type: :string },
-            updated_at: { type: :string }
+            created_at: { type: :string }
           }
 
-        let(:user) { User.create!(provider: 1, provider_id: 'test_123', nickname: 'Test User') }
-        let(:token) { JwtService.encode(user.id) }
+        let(:user) { User.create!(provider: 'kakao', provider_id: 'test_123', username: 'test_user', nickname: '테스트', token_version: 1) }
+        let(:token) { JwtService.encode(user.id, token_version: user.token_version) }
         let(:Authorization) { "Bearer #{token}" }
-        let(:feedback) do
+        let(:body) do
           {
-            feedback: {
-              content: '앱이 정말 좋아요! 계속 사용하고 싶습니다.',
-              app_version: '1.0.0',
-              platform: 'ios'
-            }
+            content: '왹왹이 너무 귀여워요!',
+            device_type: 'ios',
+            app_version: '1.0.3'
           }
         end
 
+        before { user }
         run_test!
       end
 
-      response '401', '인증 실패' do
-        schema type: :object,
-          properties: {
-            error: { type: :string }
-          }
-
-        let(:Authorization) { nil }
-        let(:feedback) { { feedback: {} } }
-
-        run_test!
-      end
-
-      response '422', '유효성 검사 실패' do
-        schema type: :object,
-          properties: {
-            errors: { type: :array, items: { type: :string } }
-          }
-
-        let(:user) { User.create!(provider: 1, provider_id: 'test_123', nickname: 'Test User') }
-        let(:token) { JwtService.encode(user.id) }
+      response '400', '필수 필드 누락' do
+        let(:user) { User.create!(provider: 'kakao', provider_id: 'test_123', username: 'test_user', nickname: '테스트', token_version: 1) }
+        let(:token) { JwtService.encode(user.id, token_version: user.token_version) }
         let(:Authorization) { "Bearer #{token}" }
-        let(:feedback) { { feedback: { content: '', platform: '' } } }
+        let(:body) { { content: '테스트' } }
 
+        before { user }
+        run_test!
+      end
+    end
+  end
+
+  path '/admin/feedbacks' do
+    get '피드백 목록 조회 (관리자용)' do
+      tags '피드백'
+      description '모든 피드백을 조회합니다. (관리자용)'
+      security [bearerAuth: []]
+      produces 'application/json'
+
+      response '200', '조회 성공' do
+        schema type: :object,
+          properties: {
+            items: {
+              type: :array,
+              items: {
+                type: :object,
+                properties: {
+                  id: { type: :integer },
+                  user: {
+                    type: :object,
+                    properties: {
+                      id: { type: :integer },
+                      username: { type: :string },
+                      nickname: { type: :string }
+                    }
+                  },
+                  content: { type: :string },
+                  created_at: { type: :string }
+                }
+              }
+            },
+            total_count: { type: :integer }
+          }
+
+        let(:user) { User.create!(provider: 'kakao', provider_id: 'test_123', username: 'test_user', nickname: '테스트', token_version: 1) }
+        let(:token) { JwtService.encode(user.id, token_version: user.token_version) }
+        let(:Authorization) { "Bearer #{token}" }
+
+        before { user }
         run_test!
       end
     end
   end
 end
-
-

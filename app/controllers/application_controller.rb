@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::API
   # ISO8601 UTC 형식으로 시간 변환
   before_action :set_time_zone
+  # 인증이 필요한 모든 액션에 적용 (개별 컨트롤러에서 skip 가능)
+  before_action :authenticate_user!
 
   private
 

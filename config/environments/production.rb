@@ -57,6 +57,12 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
+  # Time zone 설정 (UTC 사용)
+  config.time_zone = 'UTC'
+  
+  # S3 관련 로깅을 위해 추가 설정
+  # AWS SDK 에러는 로그에 기록되지만, 자격 증명은 절대 로그에 포함되지 않습니다
+
   # Use a different cache store in production.
   # config.cache_store = :mem_cache_store
 

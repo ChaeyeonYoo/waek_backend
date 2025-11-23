@@ -1,0 +1,27 @@
+# AWS S3 환경 변수 설정 예제
+#
+# 이 파일을 복사하여 실제 환경 변수 파일을 만드세요:
+#   cp config/aws_env.example .env
+#   또는
+#   cp config/aws_env.example /etc/waek_backend/env
+#
+# ⚠️  중요: 이 파일은 Git에 커밋하지 마세요!
+# .gitignore에 .env가 포함되어 있습니다.
+
+# AWS IAM 사용자의 액세스 키 ID
+# IAM 콘솔에서 생성한 사용자의 액세스 키 ID를 입력하세요
+AWS_ACCESS_KEY_ID=your-access-key-id-here
+
+# AWS IAM 사용자의 비밀 액세스 키
+# IAM 콘솔에서 생성한 사용자의 비밀 액세스 키를 입력하세요
+# ⚠️  이 값은 한 번만 표시되므로 안전하게 보관하세요
+AWS_SECRET_ACCESS_KEY=your-secret-access-key-here
+
+# AWS 리전
+# S3 버킷이 생성된 리전을 입력하세요 (기본값: ap-northeast-2)
+AWS_REGION=ap-northeast-2
+
+# S3 버킷 이름
+# 실제 생성한 S3 버킷 이름을 입력하세요 (기본값: waek-photo-bucket)
+AWS_S3_BUCKET=waek-photo-bucket
+

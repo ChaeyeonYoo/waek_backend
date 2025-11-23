@@ -1,18 +1,30 @@
 # Walk (산책 기록) 관련 API 컨트롤러
 class WalksController < ApplicationController
+  require 'securerandom'
   before_action :authenticate_user!
 
   # POST /uploads/presigned_url
   # 산책 사진 업로드용 presigned URL 발급
   def presigned_url
-    file_name = params[:file_name]
     content_type = params[:content_type] || 'image/jpeg'
     use_case = params[:use_case] || 'walk_card'
 
-    unless file_name
-      render json: { error: 'file_name은 필수입니다' }, status: :bad_request
-      return
-    end
+    # content_type에서 확장자 추출
+    extension = case content_type
+                when 'image/jpeg', 'image/jpg'
+                  'jpg'
+                when 'image/png'
+                  'png'
+                when 'image/gif'
+                  'gif'
+                when 'image/webp'
+                  'webp'
+                else
+                  'jpg' # 기본값
+                end
+
+    # 자동으로 파일명 생성
+    file_name = "walk_#{Time.current.to_i}_#{SecureRandom.hex(8)}.#{extension}"
 
     result = S3PresignedUrlService.generate_presigned_url(
       file_name: file_name,
@@ -23,7 +35,7 @@ class WalksController < ApplicationController
       render json: {
         upload_url: result[:url],
         photo_key: result[:key],
-        expires_in: result[:expires_at] - Time.current
+        expires_in: 600 # 10분
       }, status: :ok
     else
       render json: { error: 'Presigned URL 생성에 실패했습니다' }, status: :internal_server_error
