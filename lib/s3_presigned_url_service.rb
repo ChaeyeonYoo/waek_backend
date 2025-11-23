@@ -18,27 +18,20 @@ class S3PresignedUrlService
   DEFAULT_REGION = 'ap-northeast-2'
 
   # S3 클라이언트 초기화
-  # 환경 변수에서 자격 증명을 읽어옵니다
+  # config/initializers/aws.rb에서 설정한 전역 AWS 설정을 사용합니다
   # @return [Aws::S3::Client] S3 클라이언트 인스턴스
   def self.s3_client
     @s3_client ||= begin
-      access_key_id = ENV['AWS_ACCESS_KEY_ID']
-      secret_access_key = ENV['AWS_SECRET_ACCESS_KEY']
-      region = ENV.fetch('AWS_REGION', DEFAULT_REGION)
-
       # 프로덕션 환경에서 자격 증명 누락 시 경고
       if Rails.env.production?
-        if access_key_id.blank? || secret_access_key.blank?
+        if ENV['AWS_ACCESS_KEY_ID'].blank? || ENV['AWS_SECRET_ACCESS_KEY'].blank?
           Rails.logger.error "S3 자격 증명이 설정되지 않았습니다. AWS_ACCESS_KEY_ID와 AWS_SECRET_ACCESS_KEY를 확인하세요."
           raise "AWS credentials are missing in production environment"
         end
       end
 
-      Aws::S3::Client.new(
-        access_key_id: access_key_id,
-        secret_access_key: secret_access_key,
-        region: region
-      )
+      # 전역 AWS 설정 사용 (config/initializers/aws.rb에서 설정됨)
+      Aws::S3::Client.new
     end
   end
 

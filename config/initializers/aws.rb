@@ -14,6 +14,25 @@
 # - .env 파일은 .gitignore에 포함되어 있습니다
 # - 프로덕션 서버에서는 시스템 환경 변수나 안전한 secrets 관리 도구를 사용하세요
 
+require 'aws-sdk-s3'
+
+# AWS SDK 전역 설정
+# 환경 변수가 설정된 경우에만 자격 증명 설정
+if ENV['AWS_ACCESS_KEY_ID'].present? && ENV['AWS_SECRET_ACCESS_KEY'].present?
+  Aws.config.update(
+    region: ENV.fetch('AWS_REGION', 'ap-northeast-2'),
+    credentials: Aws::Credentials.new(
+      ENV['AWS_ACCESS_KEY_ID'],
+      ENV['AWS_SECRET_ACCESS_KEY']
+    )
+  )
+else
+  # 환경 변수가 없으면 기본 설정만 (자격 증명은 나중에 설정 가능)
+  Aws.config.update(
+    region: ENV.fetch('AWS_REGION', 'ap-northeast-2')
+  )
+end
+
 Rails.application.configure do
   # 프로덕션 환경에서 AWS 자격 증명 확인
   if Rails.env.production?
@@ -38,4 +57,3 @@ if Rails.env.development?
     log_level: :info
   )
 end
-
