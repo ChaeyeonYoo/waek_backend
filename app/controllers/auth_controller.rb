@@ -2,6 +2,11 @@
 class AuthController < ApplicationController
   skip_before_action :authenticate_user!, only: [:social_verify, :social_signup, :check_id]
 
+  # username 규칙
+  USERNAME_REGEX = /\A[a-z0-9_]+\z/
+  USERNAME_MIN_LENGTH = 3
+  USERNAME_MAX_LENGTH = 20
+
   # POST /auth/social/verify
   # 소셜 유저 존재 확인 + 로그인
   def social_verify
@@ -136,18 +141,36 @@ class AuthController < ApplicationController
   # GET /users/check_id
   # username 중복 확인
   def check_id
-    username = params[:username]
+    username = params[:username].to_s
 
-    unless username
-      render json: { error: 'username은 필수입니다' }, status: :bad_request
+    # 1) 비어있는 값 막기
+    if username.blank?
+      render json: { error: "username is required" }, status: :bad_request
       return
     end
 
-    available = !User.exists?(username: username)
+    # 2) 길이 제한
+    unless username.length.between?(USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH)
+      render json: {
+        error: "username must be #{USERNAME_MIN_LENGTH}~#{USERNAME_MAX_LENGTH} characters"
+      }, status: :bad_request
+      return
+    end
+
+    # 3) 허용 문자 체크 (소문자 + 숫자 + _)
+    unless username.match?(USERNAME_REGEX)
+      render json: {
+        error: "username can only contain lowercase letters, numbers, and underscore"
+      }, status: :bad_request
+      return
+    end
+
+    # 4) 중복 여부 체크
+    exists = User.exists?(username: username)
 
     render json: {
       username: username,
-      available: available
+      available: !exists
     }, status: :ok
   end
 

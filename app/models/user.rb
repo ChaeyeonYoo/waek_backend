@@ -9,7 +9,9 @@ class User < ApplicationRecord
   validates :provider, presence: true, inclusion: { in: %w[kakao google apple] }
   validates :provider_id, presence: true
   validates :nickname, presence: true
-  validates :username, uniqueness: true, allow_nil: true
+  validates :username, uniqueness: true, allow_nil: true, 
+            format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscore" },
+            length: { minimum: 3, maximum: 20, message: "must be 3~20 characters" }
   validates :profile_image_code, inclusion: { in: 0..4 }, allow_nil: true
   validates :token_version, presence: true, numericality: { greater_than_or_equal_to: 1 }
 

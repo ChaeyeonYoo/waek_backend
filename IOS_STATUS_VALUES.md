@@ -247,3 +247,5 @@ struct TokenResponse: Codable {
 
 모든 status 값은 **소문자** 또는 **대문자**로 일관되게 사용됩니다.
 
+
+
