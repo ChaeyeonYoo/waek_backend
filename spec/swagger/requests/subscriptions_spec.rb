@@ -11,7 +11,7 @@ RSpec.describe 'Subscriptions API', type: :request do
       response '200', '조회 성공' do
         schema type: :object,
           properties: {
-            type: { type: :string, enum: ['paid', 'trial', 'none'], example: 'none' },
+            type: { type: :string, enum: ['paid', 'trial', 'none'], example: 'none', description: '구독 타입: paid(유료), trial(무료체험), none(비구독)' },
             is_subscribed: { type: :boolean },
             is_trial: { type: :boolean },
             is_expired: { type: :boolean },
@@ -51,7 +51,7 @@ RSpec.describe 'Subscriptions API', type: :request do
       response '200', '구독 활성화 성공' do
         schema type: :object,
           properties: {
-            status: { type: :string, example: 'subscribed' },
+            status: { type: :string, enum: ['subscribed'], example: 'subscribed', description: '구독 활성화 상태' },
             subscription_expires_at: { type: :string }
           }
 
@@ -80,7 +80,7 @@ RSpec.describe 'Subscriptions API', type: :request do
       response '200', '구독 해지 성공' do
         schema type: :object,
           properties: {
-            status: { type: :string, example: 'cancelled' },
+            status: { type: :string, enum: ['cancelled'], example: 'cancelled', description: '구독 해지 상태' },
             expires_at: { type: :string }
           }
 

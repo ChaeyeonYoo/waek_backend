@@ -12,9 +12,9 @@ RSpec.describe 'Feedbacks API', type: :request do
       parameter name: :body, in: :body, schema: {
         type: :object,
         properties: {
-          content: { type: :string, example: '왹왹이 너무 귀여워요! 산책할 때 동기부여 돼요 🐣' },
-          device_type: { type: :string, enum: ['ios', 'android', 'web'], example: 'ios' },
-          app_version: { type: :string, example: '1.0.3' }
+          content: { type: :string, example: '왹왹이 너무 귀여워요! 산책할 때 동기부여 돼요 🐣', description: '피드백 내용' },
+          device_type: { type: :string, enum: ['ios', 'android', 'web'], example: 'ios', description: '디바이스 타입' },
+          app_version: { type: :string, example: '1.0.3', description: '앱 버전' }
         },
         required: ['content', 'device_type', 'app_version']
       }

@@ -20,22 +20,22 @@ RSpec.describe 'Auth API', type: :request do
       response '200', '기존 유저인 경우 (로그인 성공)' do
         schema type: :object,
           properties: {
-            status: { type: :string, example: 'EXISTS' },
+            status: { type: :string, enum: ['EXISTS', 'NEED_SIGNUP'], example: 'EXISTS' },
             user: {
               type: :object,
               properties: {
                 id: { type: :integer },
                 username: { type: :string },
                 nickname: { type: :string },
-                profile_image_code: { type: :integer },
-                provider: { type: :string }
+                profile_image_code: { type: :integer, minimum: 0, maximum: 4, description: '0~4 사이의 값' },
+                provider: { type: :string, enum: ['kakao', 'google', 'apple'] }
               }
             },
             token: {
               type: :object,
               properties: {
                 access_token: { type: :string },
-                token_type: { type: :string, example: 'Bearer' },
+                token_type: { type: :string, enum: ['Bearer'], example: 'Bearer' },
                 expires_in: { type: :integer, example: 3600 }
               }
             }
@@ -54,8 +54,8 @@ RSpec.describe 'Auth API', type: :request do
       response '200', '기존 유저가 아닌 경우 (회원가입 필요)' do
         schema type: :object,
           properties: {
-            status: { type: :string, example: 'NEED_SIGNUP' },
-            provider: { type: :string }
+            status: { type: :string, enum: ['EXISTS', 'NEED_SIGNUP'], example: 'NEED_SIGNUP' },
+            provider: { type: :string, enum: ['kakao', 'google', 'apple'] }
           }
 
         let(:body) { { provider: 'kakao', provider_id: 'new_user_123' } }
@@ -86,11 +86,11 @@ RSpec.describe 'Auth API', type: :request do
       parameter name: :body, in: :body, schema: {
         type: :object,
         properties: {
-          provider: { type: :string, enum: ['kakao', 'google', 'apple'], example: 'kakao' },
-          provider_id: { type: :string, example: '123456' },
-          username: { type: :string, example: 'waek_chae' },
-          nickname: { type: :string, example: '채연' },
-          profile_image_code: { type: :integer, example: 2, description: '0~4 사이의 값' },
+          provider: { type: :string, enum: ['kakao', 'google', 'apple'], example: 'kakao', description: '소셜 로그인 제공자' },
+          provider_id: { type: :string, example: '123456', description: '소셜 로그인 제공자에서 받은 고유 ID' },
+          username: { type: :string, example: 'waek_chae', description: '유니크 사용자 ID' },
+          nickname: { type: :string, example: '채연', description: '사용자 닉네임' },
+          profile_image_code: { type: :integer, minimum: 0, maximum: 4, example: 2, description: '프로필 이미지 코드 (0~4)' },
           social_email: { type: :string, example: 'test@example.com', description: '선택사항' }
         },
         required: ['provider', 'provider_id', 'username', 'nickname']
@@ -105,8 +105,8 @@ RSpec.describe 'Auth API', type: :request do
                 id: { type: :integer },
                 username: { type: :string },
                 nickname: { type: :string },
-                profile_image_code: { type: :integer },
-                provider: { type: :string },
+                profile_image_code: { type: :integer, minimum: 0, maximum: 4 },
+                provider: { type: :string, enum: ['kakao', 'google', 'apple'] },
                 created_at: { type: :string },
                 updated_at: { type: :string }
               }

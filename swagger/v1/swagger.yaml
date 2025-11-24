@@ -24,6 +24,9 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum:
+                    - EXISTS
+                    - NEED_SIGNUP
                     example: NEED_SIGNUP
                   user:
                     type: object
@@ -36,8 +39,15 @@ paths:
                         type: string
                       profile_image_code:
                         type: integer
+                        minimum: 0
+                        maximum: 4
+                        description: 0~4 사이의 값
                       provider:
                         type: string
+                        enum:
+                        - kakao
+                        - google
+                        - apple
                   token:
                     type: object
                     properties:
@@ -45,12 +55,18 @@ paths:
                         type: string
                       token_type:
                         type: string
+                        enum:
+                        - Bearer
                         example: Bearer
                       expires_in:
                         type: integer
                         example: 3600
                   provider:
                     type: string
+                    enum:
+                    - kakao
+                    - google
+                    - apple
         '400':
           description: 필수 필드 누락
           content:
@@ -105,8 +121,14 @@ paths:
                         type: string
                       profile_image_code:
                         type: integer
+                        minimum: 0
+                        maximum: 4
                       provider:
                         type: string
+                        enum:
+                        - kakao
+                        - google
+                        - apple
                       created_at:
                         type: string
                       updated_at:
@@ -139,19 +161,25 @@ paths:
                   - google
                   - apple
                   example: kakao
+                  description: 소셜 로그인 제공자
                 provider_id:
                   type: string
                   example: '123456'
+                  description: 소셜 로그인 제공자에서 받은 고유 ID
                 username:
                   type: string
                   example: waek_chae
+                  description: 유니크 사용자 ID
                 nickname:
                   type: string
                   example: 채연
+                  description: 사용자 닉네임
                 profile_image_code:
                   type: integer
+                  minimum: 0
+                  maximum: 4
                   example: 2
-                  description: 0~4 사이의 값
+                  description: 프로필 이미지 코드 (0~4)
                 social_email:
                   type: string
                   example: test@example.com
@@ -274,6 +302,7 @@ paths:
                 content:
                   type: string
                   example: "왹왹이 너무 귀여워요! 산책할 때 동기부여 돼요 \U0001F423"
+                  description: 피드백 내용
                 device_type:
                   type: string
                   enum:
@@ -281,9 +310,11 @@ paths:
                   - android
                   - web
                   example: ios
+                  description: 디바이스 타입
                 app_version:
                   type: string
                   example: 1.0.3
+                  description: 앱 버전
               required:
               - content
               - device_type
@@ -349,6 +380,7 @@ paths:
                     - trial
                     - none
                     example: none
+                    description: '구독 타입: paid(유료), trial(무료체험), none(비구독)'
                   is_subscribed:
                     type: boolean
                   is_trial:
@@ -383,7 +415,10 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum:
+                    - subscribed
                     example: subscribed
+                    description: 구독 활성화 상태
                   subscription_expires_at:
                     type: string
       requestBody:
