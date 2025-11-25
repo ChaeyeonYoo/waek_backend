@@ -63,11 +63,11 @@ class SubscriptionsController < ApplicationController
       return
     end
 
-    # expires_at 파싱
+    # expires_at 파싱 (현재 시간대 기준)
     begin
-      expires_at_time = Time.parse(expires_at).utc
+      expires_at_time = Time.zone.parse(expires_at)
     rescue ArgumentError
-      render json: { error: 'expires_at 형식이 올바르지 않습니다 (ISO8601 UTC 형식 필요)' }, status: :bad_request
+      render json: { error: 'expires_at 형식이 올바르지 않습니다 (ISO8601 형식 필요)' }, status: :bad_request
       return
     end
 

@@ -21,7 +21,13 @@ module WaekBackend
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    # Time zone 설정 (한국 시간대)
+    # 추후 UTC로 전환 시: config.time_zone = "UTC"로 변경
+    config.time_zone = "Asia/Seoul"
+    
+    # DB에 시간을 로컬 시간대로 저장 (KST 기준)
+    # 추후 UTC로 전환 시: :utc로 변경
+    config.active_record.default_timezone = :local
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Only loads a smaller set of middleware suitable for API only apps.

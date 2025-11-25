@@ -60,12 +60,14 @@ class WalksController < ApplicationController
       return
     end
 
-    # 시간 파싱
+    # 시간 파싱 (현재 시간대 기준)
+    # ISO8601 형식을 파싱하여 현재 Time.zone(Asia/Seoul)으로 변환
+    # 클라이언트가 오프셋을 포함한 ISO8601을 보내면 자동으로 변환됩니다
     begin
-      walk_params[:started_at] = Time.parse(walk_params[:started_at]).utc
-      walk_params[:ended_at] = Time.parse(walk_params[:ended_at]).utc
+      walk_params[:started_at] = Time.zone.parse(walk_params[:started_at])
+      walk_params[:ended_at] = Time.zone.parse(walk_params[:ended_at])
     rescue ArgumentError
-      render json: { error: '시간 형식이 올바르지 않습니다 (ISO8601 UTC 형식 필요)' }, status: :bad_request
+      render json: { error: '시간 형식이 올바르지 않습니다 (ISO8601 형식 필요)' }, status: :bad_request
       return
     end
 

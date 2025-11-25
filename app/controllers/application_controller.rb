@@ -46,14 +46,22 @@ class ApplicationController < ActionController::API
     true
   end
 
-  # ISO8601 UTC 형식으로 시간 변환
+  # 시간대 설정
+  # 현재는 한국 시간대(KST) 사용, 추후 UTC로 전환 가능
   def set_time_zone
-    Time.zone = 'UTC'
+    Time.zone = 'Asia/Seoul'  # 한국 시간대 (UTC+09:00)
+    # 추후 글로벌 서비스 시: Time.zone = 'UTC'로 변경
   end
 
-  # ISO8601 UTC 형식으로 시간 포맷팅
+  # ISO8601 오프셋 형식으로 시간 포맷팅
+  # 
+  # 현재: "2025-11-25T18:36:07+09:00" (KST)
+  # 추후 UTC 전환 시: "2025-11-25T09:36:07Z" (UTC)
+  # 
+  # @param datetime [ActiveSupport::TimeWithZone, Time, DateTime] 시간 객체
+  # @return [String, nil] ISO8601 형식 문자열 또는 nil
   def format_time(datetime)
     return nil unless datetime
-    datetime.utc.iso8601
+    datetime.in_time_zone(Time.zone).iso8601
   end
 end
