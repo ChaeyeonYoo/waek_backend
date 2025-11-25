@@ -9,14 +9,17 @@ class User < ApplicationRecord
   validates :provider, presence: true, inclusion: { in: %w[kakao google apple] }
   validates :provider_id, presence: true
   validates :nickname, presence: true
-  validates :username, uniqueness: true, allow_nil: true, 
-            format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscore" },
-            length: { minimum: 3, maximum: 20, message: "must be 3~20 characters" }
   validates :profile_image_code, inclusion: { in: 0..4 }, allow_nil: true
   validates :token_version, presence: true, numericality: { greater_than_or_equal_to: 1 }
 
-  # provider와 provider_id의 조합은 유일해야 함 (소셜 로그인 중복 방지)
-  validates :provider_id, uniqueness: { scope: :provider }
+  # username 유효성 검사 (soft delete된 유저 제외)
+  validates :username, allow_nil: true,
+            format: { with: /\A[a-z0-9_]+\z/, message: "can only contain lowercase letters, numbers, and underscore" },
+            length: { minimum: 3, maximum: 20, message: "must be 3~20 characters" }
+  validate :username_unique_among_active_users
+
+  # provider와 provider_id의 조합은 active 유저 중에서 유일해야 함 (soft delete된 유저 제외)
+  validate :provider_id_unique_among_active_users
 
   # Soft delete 체크
   scope :active, -> { where(deleted_at: nil) }
@@ -58,5 +61,34 @@ class User < ApplicationRecord
   # 로그아웃 시 token_version 증가
   def increment_token_version!
     increment!(:token_version)
+  end
+
+  private
+
+  # username이 active 유저 중에서 유일한지 확인
+  def username_unique_among_active_users
+    return if username.blank?
+    return if deleted_at.present? # 이미 삭제된 유저는 체크 안 함
+
+    # 자기 자신을 제외하고, active 유저 중 같은 username이 있는지 확인
+    existing = User.active.where(username: username)
+    existing = existing.where.not(id: id) if persisted?
+
+    if existing.exists?
+      errors.add(:username, "has already been taken")
+    end
+  end
+
+  # provider + provider_id 조합이 active 유저 중에서 유일한지 확인
+  def provider_id_unique_among_active_users
+    return if deleted_at.present? # 이미 삭제된 유저는 체크 안 함
+
+    # 자기 자신을 제외하고, active 유저 중 같은 provider + provider_id가 있는지 확인
+    existing = User.active.where(provider: provider, provider_id: provider_id)
+    existing = existing.where.not(id: id) if persisted?
+
+    if existing.exists?
+      errors.add(:provider_id, "has already been taken for this provider")
+    end
   end
 end

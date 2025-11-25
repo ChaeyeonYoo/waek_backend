@@ -79,14 +79,14 @@ class AuthController < ApplicationController
       return
     end
 
-    # username 중복 확인
-    if User.exists?(username: username)
+    # username 중복 확인 (active 유저만)
+    if User.active.exists?(username: username)
       render json: { error: '이미 사용 중인 username입니다' }, status: :conflict
       return
     end
 
-    # provider + provider_id 중복 확인
-    if User.exists?(provider: provider, provider_id: provider_id)
+    # provider + provider_id 중복 확인 (active 유저만)
+    if User.active.exists?(provider: provider, provider_id: provider_id)
       render json: { error: '이미 가입된 소셜 계정입니다' }, status: :conflict
       return
     end
@@ -165,8 +165,8 @@ class AuthController < ApplicationController
       return
     end
 
-    # 4) 중복 여부 체크
-    exists = User.exists?(username: username)
+    # 4) 중복 여부 체크 (active 유저만)
+    exists = User.active.exists?(username: username)
 
     render json: {
       username: username,
