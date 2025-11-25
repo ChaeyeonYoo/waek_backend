@@ -51,53 +51,25 @@ class SubscriptionsController < ApplicationController
   end
 
   # POST /me/subscription/temp
-  # 임시 구독 활성화 (iOS 테스트용)
-  # 
-  # 이 API는 실제 결제 없이 구독 상태를 활성화합니다.
-  # iOS 개발/테스트 단계에서만 사용하며, 실제 서비스 배포 시 제거될 예정입니다.
-  # 
-  # Request body:
-  #   { "is_subscribed": true } 또는 { "activate": true }
-  # 
-  # TODO: 실제 결제 연동 완료 후 이 메서드 제거
+  # ⚠️ 임시 구독 활성화 (iOS 테스트용, 추후 제거 예정)
   def activate_temp_subscription
-    activate = params[:activate] || params[:is_subscribed]
-
-    unless activate
-      render json: { error: 'activate 또는 is_subscribed 파라미터가 필요합니다' }, status: :bad_request
-      return
-    end
-
     user = current_user
+    subscribed_at = Time.current
+    subscription_expires_at = subscribed_at + 30.days
 
-    if activate.to_s == 'true' || activate == true
-      # 구독 활성화 (30일 유효)
-      subscribed_at = Time.current
-      subscription_expires_at = subscribed_at + 30.days
+    user.update!(
+      is_subscribed: true,
+      subscribed_at: subscribed_at,
+      subscription_expires_at: subscription_expires_at
+    )
 
-      user.update!(
-        is_subscribed: true,
-        subscribed_at: subscribed_at,
-        subscription_expires_at: subscription_expires_at
-      )
-
-      render json: {
-        status: 'activated',
-        message: '임시 구독이 활성화되었습니다 (테스트용)',
-        is_subscribed: user.is_subscribed,
-        subscription_expires_at: format_time(user.subscription_expires_at),
-        days_left: user.days_left
-      }, status: :ok
-    else
-      # 구독 비활성화
-      user.update!(is_subscribed: false)
-
-      render json: {
-        status: 'deactivated',
-        message: '임시 구독이 비활성화되었습니다',
-        is_subscribed: user.is_subscribed
-      }, status: :ok
-    end
+    render json: {
+      status: 'activated',
+      message: '임시 구독이 활성화되었습니다 (iOS 테스트용)',
+      is_subscribed: user.is_subscribed,
+      subscription_expires_at: format_time(user.subscription_expires_at),
+      days_left: user.days_left
+    }, status: :ok
   end
 
   # POST /me/subscription

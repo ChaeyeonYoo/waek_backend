@@ -24,7 +24,7 @@ Rails.application.routes.draw do
   # Subscription (구독) API
   get 'me/subscription', to: 'subscriptions#show'
   post 'me/subscription/trial', to: 'subscriptions#start_trial'
-  post 'me/subscription/temp', to: 'subscriptions#activate_temp_subscription'  # 임시 구독 활성화 (iOS 테스트용)
+  post 'me/subscription/temp', to: 'subscriptions#activate_temp_subscription' # 임시 구독 활성화 (iOS 테스트용)
   post 'me/subscription', to: 'subscriptions#create'
   delete 'me/subscription', to: 'subscriptions#destroy'
 end

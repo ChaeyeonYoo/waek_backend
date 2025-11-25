@@ -97,48 +97,23 @@ RSpec.describe 'Subscriptions API', type: :request do
   path '/me/subscription/temp' do
     post '임시 구독 활성화 (iOS 테스트용)' do
       tags '구독'
-      description '⚠️ iOS 테스트용 임시 API입니다. 실제 결제 없이 구독 상태를 활성화합니다. 실제 서비스 배포 시 제거될 예정입니다.'
+      description '⚠️ iOS 테스트용 임시 API입니다. 요청 바디 없이 호출하면 구독 상태가 즉시 활성화됩니다. 실 결제 도입 시 제거 예정입니다.'
       security [bearerAuth: []]
-      consumes 'application/json'
       produces 'application/json'
-
-      parameter name: :body, in: :body, schema: {
-        type: :object,
-        properties: {
-          activate: { type: :boolean, example: true, description: '구독 활성화 여부 (true: 활성화, false: 비활성화)' },
-          is_subscribed: { type: :boolean, example: true, description: 'activate와 동일한 의미 (둘 중 하나 사용)' }
-        }
-      }
 
       response '200', '임시 구독 활성화 성공' do
         schema type: :object,
           properties: {
-            status: { type: :string, enum: ['activated', 'deactivated'], example: 'activated' },
-            message: { type: :string, example: '임시 구독이 활성화되었습니다 (테스트용)' },
+            status: { type: :string, enum: ['activated'], example: 'activated' },
+            message: { type: :string, example: '임시 구독이 활성화되었습니다 (iOS 테스트용)' },
             is_subscribed: { type: :boolean },
-            subscription_expires_at: { type: :string, nullable: true },
-            days_left: { type: :integer, nullable: true }
+            subscription_expires_at: { type: :string },
+            days_left: { type: :integer }
           }
 
         let(:user) { User.create!(provider: 'kakao', provider_id: 'test_123', username: 'test_user', nickname: '테스트', token_version: 1) }
         let(:token) { JwtService.encode(user.id, token_version: user.token_version) }
         let(:Authorization) { "Bearer #{token}" }
-        let(:body) { { activate: true } }
-
-        before { user }
-        run_test!
-      end
-
-      response '400', '필수 파라미터 누락' do
-        schema type: :object,
-          properties: {
-            error: { type: :string }
-          }
-
-        let(:user) { User.create!(provider: 'kakao', provider_id: 'test_123', username: 'test_user', nickname: '테스트', token_version: 1) }
-        let(:token) { JwtService.encode(user.id, token_version: user.token_version) }
-        let(:Authorization) { "Bearer #{token}" }
-        let(:body) { {} }
 
         before { user }
         run_test!

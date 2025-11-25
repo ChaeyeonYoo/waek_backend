@@ -109,11 +109,10 @@ paths:
       summary: 임시 구독 활성화 (iOS 테스트용)
       tags:
       - 구독
-      description: "⚠️ iOS 테스트용 임시 API입니다. 실제 결제 없이 구독 상태를 활성화합니다. 실제 서비스 배포 시 제거될
-        예정입니다."
+      description: "⚠️ iOS 테스트용 임시 API입니다. 요청 바디 없이 호출하면 구독 상태가 즉시 활성화됩니다. 실 결제 도입
+        시 제거 예정입니다."
       security:
       - bearerAuth: []
-      parameters: []
       responses:
         '200':
           description: 임시 구독 활성화 성공
@@ -126,42 +125,16 @@ paths:
                     type: string
                     enum:
                     - activated
-                    - deactivated
                     example: activated
                   message:
                     type: string
-                    example: 임시 구독이 활성화되었습니다 (테스트용)
+                    example: 임시 구독이 활성화되었습니다 (iOS 테스트용)
                   is_subscribed:
                     type: boolean
                   subscription_expires_at:
                     type: string
-                    nullable: true
                   days_left:
                     type: integer
-                    nullable: true
-        '400':
-          description: 필수 파라미터 누락
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                activate:
-                  type: boolean
-                  example: true
-                  description: '구독 활성화 여부 (true: 활성화, false: 비활성화)'
-                is_subscribed:
-                  type: boolean
-                  example: true
-                  description: activate와 동일한 의미 (둘 중 하나 사용)
   "/me/subscription/trial":
     post:
       summary: 무료체험 시작
