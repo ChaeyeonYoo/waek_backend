@@ -44,5 +44,5 @@ class JwtService
   def self.user_id_from_token(token)
     decoded = decode(token)
     decoded&.dig(:user_id)
-  end
+end
 end

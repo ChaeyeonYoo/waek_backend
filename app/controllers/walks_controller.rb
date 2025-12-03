@@ -91,11 +91,7 @@ class WalksController < ApplicationController
     
     # 페이지네이션 (선택적)
     page = params[:page]&.to_i || 1
-    page = 1 if page < 1  # 최소값: 1
-    
     per_page = params[:per_page]&.to_i || 20
-    per_page = [[per_page, 100].min, 1].max  # 최소값: 1, 최댓값: 100
-    
     total_count = walks.count
     walks = walks.limit(per_page).offset((page - 1) * per_page)
 
