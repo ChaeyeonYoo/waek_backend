@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_11_25_092154) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_03_024603) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -42,6 +42,7 @@ ActiveRecord::Schema[7.1].define(version: 2025_11_25_092154) do
     t.boolean "has_used_trial", default: false, null: false
     t.datetime "last_login_at"
     t.datetime "deleted_at"
+    t.boolean "has_ever_subscribed", default: false, null: false
     t.index ["deleted_at"], name: "index_users_on_deleted_at"
     t.index ["provider", "provider_id"], name: "index_users_on_provider_and_provider_id_where_not_deleted", unique: true, where: "(deleted_at IS NULL)"
     t.index ["username"], name: "index_users_on_username_where_not_deleted", unique: true, where: "(deleted_at IS NULL)"

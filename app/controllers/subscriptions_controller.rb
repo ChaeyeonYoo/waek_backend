@@ -13,6 +13,7 @@ class SubscriptionsController < ApplicationController
       is_trial: user.is_trial,
       is_expired: user.is_expired?,
       has_used_trial: user.has_used_trial,
+      has_ever_subscribed: user.has_ever_subscribed, # 한번이라도 구독한 경험 여부
       subscription_expires_at: format_time(user.subscription_expires_at),
       trial_expires_at: format_time(user.trial_expires_at),
       days_left: user.days_left
@@ -60,7 +61,8 @@ class SubscriptionsController < ApplicationController
     user.update!(
       is_subscribed: true,
       subscribed_at: subscribed_at,
-      subscription_expires_at: subscription_expires_at
+      subscription_expires_at: subscription_expires_at,
+      has_ever_subscribed: true # 구독 경험 기록
     )
 
     render json: {
@@ -99,7 +101,8 @@ class SubscriptionsController < ApplicationController
     user.update!(
       is_subscribed: true,
       subscribed_at: subscribed_at,
-      subscription_expires_at: expires_at_time
+      subscription_expires_at: expires_at_time,
+      has_ever_subscribed: true # 구독 경험 기록
     )
 
     render json: {
