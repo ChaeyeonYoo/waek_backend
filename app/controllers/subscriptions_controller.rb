@@ -52,25 +52,83 @@ class SubscriptionsController < ApplicationController
   end
 
   # POST /me/subscription/temp
-  # ⚠️ 임시 구독 활성화 (iOS 테스트용, 추후 제거 예정)
+  # ⚠️ 임시 구독 활성화 (iOS 테스트용, 추후 정식 API로 전환 예정)
+  # 선택적으로 정식 API 파라미터(expires_at, transaction_id)를 받을 수 있음
+  # 이미 구독 경험이 있는 경우에도 반영 가능 (연장/재구독)
   def activate_temp_subscription
     user = current_user
-    subscribed_at = Time.current
-    subscription_expires_at = subscribed_at + 30.days
+    current_time = Time.current
+    
+    # 업데이트 전 상태 저장 (로그/메시지용)
+    was_already_subscribed = user.is_subscribed && user.subscription_expires_at && user.subscription_expires_at > current_time
+    
+    # expires_at이 제공되면 사용, 없으면 기본 30일
+    expires_at_param = params[:expires_at]
+    transaction_id = params[:transaction_id]
+    platform = params[:platform] || 'ios'
+    
+    if expires_at_param
+      begin
+        subscription_expires_at = Time.zone.parse(expires_at_param)
+      rescue ArgumentError
+        render json: { error: 'expires_at 형식이 올바르지 않습니다 (ISO8601 형식 필요)' }, status: :bad_request
+        return
+      end
+    else
+      # 기본값: 30일
+      # 이미 구독 중인 경우: 현재 만료일에서 30일 연장
+      # 만료되었거나 구독 중이 아닌 경우: 오늘부터 30일
+      if was_already_subscribed
+        # 현재 구독이 유효한 경우: 만료일 연장
+        subscription_expires_at = user.subscription_expires_at + 30.days
+      else
+        # 새로 구독하거나 만료된 경우: 오늘부터 30일
+        subscription_expires_at = current_time + 30.days
+      end
+    end
 
-    user.update!(
+    # subscribed_at 설정
+    # 이미 구독 경험이 있고 현재 구독 중이면 기존 subscribed_at 유지
+    # 새로 구독하거나 만료된 경우에만 현재 시간으로 설정
+    if user.has_ever_subscribed && was_already_subscribed
+      subscribed_at = user.subscribed_at || current_time
+    else
+      subscribed_at = current_time
+    end
+
+    # 로그 기록 (정식 API 사용 권장)
+    if Rails.env.production?
+      if expires_at_param && transaction_id
+        Rails.logger.info "✅ [TEMP API] User #{user.id} (#{user.username}) used temp API with full params (ready for migration)"
+      else
+        action_type = was_already_subscribed ? 'extended' : 'activated'
+        Rails.logger.warn "⚠️  [TEMP API] User #{user.id} (#{user.username}) used temp API to #{action_type} subscription (expires_at: #{expires_at_param.present?}, transaction_id: #{transaction_id.present?})"
+      end
+    else
+      action_type = was_already_subscribed ? 'extend' : 'activate'
+      Rails.logger.info "ℹ️  [TEMP API] User #{user.id} (#{user.username}) used temp API to #{action_type} subscription"
+    end
+
+    # 구독 정보 업데이트
+    # has_ever_subscribed는 이미 true면 유지, false면 true로 설정
+    update_params = {
       is_subscribed: true,
       subscribed_at: subscribed_at,
-      subscription_expires_at: subscription_expires_at,
-      has_ever_subscribed: true # 구독 경험 기록
-    )
+      subscription_expires_at: subscription_expires_at
+    }
+    update_params[:has_ever_subscribed] = true unless user.has_ever_subscribed
+
+    user.update!(update_params)
+
+    action_message = was_already_subscribed ? '구독이 연장되었습니다' : '구독이 활성화되었습니다'
 
     render json: {
       status: 'activated',
-      message: '임시 구독이 활성화되었습니다 (iOS 테스트용)',
+      message: action_message,
       is_subscribed: user.is_subscribed,
       subscription_expires_at: format_time(user.subscription_expires_at),
-      days_left: user.days_left
+      days_left: user.days_left,
+      has_ever_subscribed: user.has_ever_subscribed
     }, status: :ok
   end
 
